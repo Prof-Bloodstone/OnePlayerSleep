@@ -22,7 +22,7 @@ public class OnePlayerSleepRunnable extends BukkitRunnable {
         // TODO: Extract all the logic to separate functions
         advanceTime();
         // It seems like MC interrupts it before full day is over - but let's leave this alternative method.
-        if (isMorning()) {
+        if (plugin.isMorning(world)) {
             plugin.getLogger().info("Morning - waking players up!");
             plugin.kickEveryoneFromBed();
         }
@@ -36,11 +36,6 @@ public class OnePlayerSleepRunnable extends BukkitRunnable {
         plugin.getLogger().info(String.format("Shifted from %d to %d", time, new_time));
     }
 
-    private boolean isMorning() {
-        long rate = plugin.getRate();
-        long time = world.getTime();
-        return (time % plugin.day_length) <= rate;
-    }
 
 
 }
