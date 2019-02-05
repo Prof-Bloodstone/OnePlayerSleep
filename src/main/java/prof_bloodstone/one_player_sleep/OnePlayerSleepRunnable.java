@@ -19,7 +19,6 @@ public class OnePlayerSleepRunnable extends BukkitRunnable {
 
     @Override
     public void run() {
-        // TODO: Extract all the logic to separate functions
         advanceTime();
         // It seems like MC interrupts it before full day is over - but let's leave this alternative method.
         if (plugin.isMorning(world)) {

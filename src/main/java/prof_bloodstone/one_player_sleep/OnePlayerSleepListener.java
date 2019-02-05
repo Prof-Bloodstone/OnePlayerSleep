@@ -20,10 +20,10 @@ public class OnePlayerSleepListener implements Listener {
     public void onPlayerBedEnterEvent(PlayerBedEnterEvent event) {
         plugin.getLogger().info("Player " + event.getPlayer().getDisplayName() + " entered bed");
         if (!plugin.getSleepingMessages().isEmpty()) {
-            BaseComponent[] message = plugin.generateRandomSleepMessage(event.getPlayer());
+            BaseComponent[] message = plugin.generateRandomSleepMessage(event.getPlayer().getDisplayName());
             plugin.getServer().spigot().broadcast(message);
         }
-        if (plugin.enabled && plugin.isEnoughPlayersSleeping(+1)) {
+        if (plugin.isEnoughPlayersSleeping(+1)) {
             plugin.getLogger().info("Enough players in bed");
             if (plugin.task == null || plugin.task.isCancelled()) {
                 plugin.getLogger().info("Enough players in bed and runnable not running");

@@ -11,35 +11,12 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Stream;
 
-// TODO: Fix - doesn't work
-//@Plugin(name = "OnePlayerSleep", version = "0.1.1")
-//@Description("Allows for skipping the night with just 1 player in bed!")
-//@LoadOrder(PluginLoadOrder.POSTWORLD)
-//@Author("Prof_Bloodstone")
-//@Command(
-//        name = "wakeup",
-//        desc = "Wakes everyone up",
-//        permission = "ops.wakeup",
-//        usage = "/<command>"
-//)
-//@Permission(
-//        name = "ops.wakeup",
-//        desc = "Allows use of wakeup command",
-//        defaultValue = PermissionDefault.TRUE
-//)
-//@Permission(
-//        name = "ops.*",
-//        desc = "Allows for everything this plugin provides",
-//        defaultValue = PermissionDefault.OP,
-//        children = {@ChildPermission(name = "ops.wakeup")}
-//)
-//@ApiVersion(ApiVersion.Target.v1_13)
+
 public class OnePlayerSleep extends JavaPlugin {
 
     private static String min_player_config = "min_players_in_bed";
     private static String min_prcnt_config = "prcnt_players_in_bed";
     final long day_length = 20 * 60 * 20;  // 20 min * 60 sec / min * 20 ticks / sec
-    boolean enabled = true;
     BukkitTask task;
 
     @Override
@@ -60,18 +37,15 @@ public class OnePlayerSleep extends JavaPlugin {
         int min_players = minPlayers();
         if (min_players <= 0) {
             getLogger().warning(String.format("\"%s\" == %d, which is negative!", min_player_config, min_players));
-//            enabled = false;
             resetConfig(min_player_config);
         }
 
         double min_prcnt = minPrcnt();
         if (min_prcnt <= 0) {
             getLogger().warning(String.format("\"%s\" == %f, which is negative or zero!", min_prcnt_config, min_prcnt));
-//            enabled = false;
             resetConfig(min_prcnt_config);
         } else if (min_prcnt > 1) {
             getLogger().warning(String.format("\"%s\" == %f, which is more than 100%%!", min_prcnt_config, min_prcnt));
-//            enabled = false;
             resetConfig(min_prcnt_config);
         }
     }
@@ -90,6 +64,9 @@ public class OnePlayerSleep extends JavaPlugin {
 
     List<String> getSleepingMessages() {
         return getConfig().getStringList("enter_bed_messages");
+    }
+    List<String> getKickMessages() {
+        return getConfig().getStringList("kicked_from_bed_messages");
     }
 
     World getOverworld() {
@@ -114,13 +91,7 @@ public class OnePlayerSleep extends JavaPlugin {
     }
 
     boolean isEnoughPlayersSleeping(int bias) {
-        // bias is for when called from bed enter / leave events
-//        int total_players = getPlayerCount();
         long sleeps = getSleepingPlayerCount() + bias;
-//        getLogger().info(String.format("total_players = %d; sleeps = %d; minPlayers() = %d; minPrcnt() * total_players = %f",
-//                total_players, sleeps, minPlayers(), minPrcnt() * total_players));
-//        return sleeps >= minPlayers()
-//                || sleeps >= minPrcnt() * total_players;
         return sleeps > getTreshold();
     }
 
@@ -130,10 +101,10 @@ public class OnePlayerSleep extends JavaPlugin {
         return Math.min(countTreshold, prcntTreshold);
     }
 
-    BaseComponent[] generateRandomSleepMessage(Player player) {
+    BaseComponent[] generateRandomSleepMessage(String player_name) {
         List<String> messageList = getSleepingMessages();
         String message = selectRandomMessage(messageList);
-        return toSleepMessage(processMessage(message, player));
+        return toSleepMessage(processSleepingMessage(message, player_name));
     }
 
     String selectRandomMessage(List<String> messages) {
@@ -160,13 +131,15 @@ public class OnePlayerSleep extends JavaPlugin {
         return components;
     }
 
-    String processMessage(String message, Player player) {
-        getLogger().info("%playername% went to bed".replaceAll("%playername%", player.getDisplayName()));
-        return message.replaceAll("%playername%", player.getDisplayName())
+    String processSleepingMessage(String message, String player_name) {
+        return processMessage(message, player_name)
                 .replaceAll("%sleeping%", Long.toString(getSleepingPlayerCount()))
-                .replaceAll("%threshold%", Integer.toString(getTreshold()))
-                .replaceAll("&([a-z0-9])", "\u00a7$1"); // Allow use of color codes
+                .replaceAll("%threshold%", Integer.toString(getTreshold()));
+    }
 
+    String processMessage(String message, String player_name) {
+        return message.replaceAll("%playername%", player_name)
+                .replaceAll("&([a-z0-9])", "\u00a7$1"); // Allow use of color codes
     }
 
     void kickFromBed(Player player) {
@@ -183,9 +156,13 @@ public class OnePlayerSleep extends JavaPlugin {
         return (time % day_length) <= rate;
     }
 
-    void kickEveryoneFromBed(Player player) {
-        // TODO: Send message stating who kicked them
-
+    void kickEveryoneFromBed(String player_name) {
+        List<String> kickMessages = getKickMessages();
+        if (!kickMessages.isEmpty()) {
+            String selectedMessage = selectRandomMessage(kickMessages);
+            String kickMessage = processMessage(selectedMessage, player_name);
+            getSleepingPlayers().forEach(p -> p.sendMessage(kickMessage));
+        }
         kickEveryoneFromBed();
     }
 }
