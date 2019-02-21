@@ -1,0 +1,4 @@
+# OnePlayerSleep
+A simple sleeping plugin for multiplayer Spigot-compatible Minecraft servers.
+# Installation
+Move OnePlayerSleep.jar to your server's `plugins` directory.

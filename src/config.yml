@@ -17,7 +17,8 @@ kicked_from_bed_messages:
   - "%playername% doesn't want you to sleep"
 # In addition to above substitutions, you can use:
 # %sleeping% - number of people currently in bed
-# %threshold% - number of people needed to skip the night
+# %threshold% - total number of people needed to skip the night
+# %needed% - number of people currently needed to skip the night
 enter_bed_messages:  # list of messages that will be displayed
   - '%playername% is saving logs'
   - '&a%playername%&r crashed... hard...'

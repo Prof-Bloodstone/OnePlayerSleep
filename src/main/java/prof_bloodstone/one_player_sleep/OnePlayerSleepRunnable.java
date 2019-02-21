@@ -1,11 +1,25 @@
 package main.java.prof_bloodstone.one_player_sleep;
 
+/*
+   OnePlayerSleep - simple sleeping plugin for multiplayer Spigot-compatible Minecraft servers.
+    Copyright (C) 2019 Prof_Bloodstone
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 import org.bukkit.World;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.util.Vector;
 
 public class OnePlayerSleepRunnable extends BukkitRunnable {
 
@@ -22,7 +36,6 @@ public class OnePlayerSleepRunnable extends BukkitRunnable {
         advanceTime();
         // It seems like MC interrupts it before full day is over - but let's leave this alternative method.
         if (plugin.isMorning(world)) {
-            plugin.getLogger().info("Morning - waking players up!");
             plugin.kickEveryoneFromBed();
         }
     }
@@ -31,8 +44,6 @@ public class OnePlayerSleepRunnable extends BukkitRunnable {
         long time = world.getTime();
         long rate = plugin.getRate();
         world.setTime(time + rate);
-        long new_time = world.getTime();
-        plugin.getLogger().info(String.format("Shifted from %d to %d", time, new_time));
     }
 
 

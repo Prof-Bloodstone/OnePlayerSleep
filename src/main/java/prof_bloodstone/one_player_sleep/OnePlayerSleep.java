@@ -1,5 +1,23 @@
 package main.java.prof_bloodstone.one_player_sleep;
 
+/*
+   OnePlayerSleep - simple sleeping plugin for multiplayer Spigot-compatible Minecraft servers.
+    Copyright (C) 2019 Prof_Bloodstone
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 import net.md_5.bungee.api.chat.*;
 import org.bukkit.World;
 import org.bukkit.entity.HumanEntity;
@@ -24,7 +42,6 @@ public class OnePlayerSleep extends JavaPlugin {
         super.onEnable();
         saveDefaultConfig();
         verifyConfig();
-        getLogger().info("Running FINEST plugin");
         getServer().getPluginManager().registerEvents(new OnePlayerSleepListener(this), this);
         getCommand("wakeup").setExecutor(new OnePlayerSleepCommandExecutor(this));
     }
@@ -92,7 +109,7 @@ public class OnePlayerSleep extends JavaPlugin {
 
     boolean isEnoughPlayersSleeping(int bias) {
         long sleeps = getSleepingPlayerCount() + bias;
-        return sleeps > getTreshold();
+        return sleeps >= getTreshold();
     }
 
     int getTreshold() {
@@ -118,7 +135,7 @@ public class OnePlayerSleep extends JavaPlugin {
     BaseComponent[] toSleepMessage(String m) {
         getLogger().info("Using " + m);
         BaseComponent[] components = TextComponent.fromLegacyText(m);
-        String hoverText = getConfig().getString("message_hover_text");
+        String hoverText = getConfig().getString("message_hover_text", null);
         ClickEvent clickEvent = new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/OnePlayerSleep:wakeup");
         HoverEvent hoverEvent = null;
         if (hoverText != null)
@@ -132,9 +149,13 @@ public class OnePlayerSleep extends JavaPlugin {
     }
 
     String processSleepingMessage(String message, String player_name) {
+        long sleeping = getSleepingPlayerCount() + 1; // +1 because player going to bed isn't counted yet.
+        int treshold = getTreshold();
+        long needed = Math.max(treshold - sleeping, 0);
         return processMessage(message, player_name)
-                .replaceAll("%sleeping%", Long.toString(getSleepingPlayerCount()))
-                .replaceAll("%threshold%", Integer.toString(getTreshold()));
+                .replaceAll("%sleeping%", Long.toString(sleeping))
+                .replaceAll("%threshold%", Integer.toString(treshold))
+                .replaceAll("%needed%", Long.toString(needed));
     }
 
     String processMessage(String message, String player_name) {
@@ -146,14 +167,14 @@ public class OnePlayerSleep extends JavaPlugin {
         player.damage(0.0);
     }
 
-    void kickEveryoneFromBed() {
-        getSleepingPlayers().forEach(this::kickFromBed);
-    }
-
     boolean isMorning(World world) {
         long rate = getRate();
         long time = world.getTime();
         return (time % day_length) <= rate;
+    }
+
+    void kickEveryoneFromBed() {
+        getSleepingPlayers().forEach(this::kickFromBed);
     }
 
     void kickEveryoneFromBed(String player_name) {
