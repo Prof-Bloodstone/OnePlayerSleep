@@ -1,4 +1,4 @@
-package main.java.prof_bloodstone.one_player_sleep;
+package dev.bloodstone.one_player_sleep;
 
 /*
    OnePlayerSleep - simple sleeping plugin for multiplayer Spigot-compatible Minecraft servers.
@@ -36,26 +36,37 @@ public class OnePlayerSleepListener implements Listener {
 
     @EventHandler
     public void onPlayerBedEnterEvent(PlayerBedEnterEvent event) {
-        if (!plugin.getSleepingMessages().isEmpty()) {
-            BaseComponent[] message = plugin.generateRandomSleepMessage(event.getPlayer().getDisplayName());
-            plugin.getServer().spigot().broadcast(message);
-        }
-        if (plugin.isEnoughPlayersSleeping(+1)) {
-            if (plugin.task == null || plugin.task.isCancelled()) {
-                plugin.task = new OnePlayerSleepRunnable(plugin, plugin.getOverworld()).runTaskTimer(
+        plugin.DEBUG("BedEnterEvent");
+        if (event.getBedEnterResult() == PlayerBedEnterEvent.BedEnterResult.OK) {
+            plugin.DEBUG("BedEnterEvent - can sleep");
+            World world = event.getPlayer().getWorld();
+            String world_name = world.getName();
+            if (!plugin.getSleepingMessages().isEmpty()) {
+                BaseComponent[] message = plugin.generateRandomSleepMessage(world, event.getPlayer().getDisplayName());
+                plugin.getServer().spigot().broadcast(message);
+            }
+            if (plugin.tasks.getOrDefault(world_name, null) == null
+                    || plugin.tasks.get(world_name).isCancelled()) {
+
+                plugin.DEBUG("BedEnterEvent - starting new task");
+                plugin.tasks.put(world_name, new OnePlayerSleepRunnable(plugin, world).runTaskTimer(
                         plugin,
                         plugin.getConfig().getInt("delay", 60),
                         plugin.getConfig().getInt("interval", 20)
-                );
+                ));
             }
         }
     }
 
     @EventHandler
     public void onPlayerBedLeaveEvent (PlayerBedLeaveEvent event) {
-        if (!plugin.isEnoughPlayersSleeping(0) && plugin.task != null && !plugin.task.isCancelled()) {
-            plugin.task.cancel();
-            World world = event.getPlayer().getWorld();
+        World world = event.getPlayer().getWorld();
+        String world_name = world.getName();
+        if (plugin.getSleepingPlayerCount(world) == 0
+                && plugin.tasks.getOrDefault(world_name, null) != null
+                && !plugin.tasks.get(world_name).isCancelled()) {
+            plugin.DEBUG("BedLeaveEvent - canceling task");
+            plugin.tasks.get(world_name).cancel();
             if (plugin.isMorning(world)) {
                 if (world.isThundering()) {world.setThunderDuration(1);}
             }

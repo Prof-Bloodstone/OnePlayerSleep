@@ -1,0 +1,61 @@
+import org.apache.tools.ant.filters.ReplaceTokens // We use this to replace version in plugin.yml
+
+apply plugin: 'java' 
+apply plugin: 'eclipse' 
+apply plugin: 'idea'
+
+group = 'dev.bloodstone' // Put your groupId here 
+version = '1.0.3' // Put your version here
+archivesBaseName = 'OnePlayerSleep' // Put your artifactId here
+
+sourceCompatibility = '1.8' // Put the minimum version of Java you want your plugin to run on
+targetCompatibility = '1.8' // Put the minimum version of Java you want your plugin to run on
+
+def bukkitVersion = '1.13.2-R0.1-SNAPSHOT' // Put the version of Bukkit/Spigot you want your plugin to depend on
+
+repositories {
+	jcenter()
+
+  maven {
+		url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' // Spigot repo
+		content {
+			includeGroup 'org.bukkit'
+			includeGroup 'org.spigotmc'
+		}
+	}
+	maven {
+		url = 'https://oss.sonatype.org/content/repositories/snapshots'
+	}
+}
+
+dependencies {
+	// compile (group: 'org.bukkit', name: 'bukkit', version: bukkitVersion)
+	compile (group: 'org.spigotmc', name: 'spigot-api', version: bukkitVersion)
+	// Uncomment the line above if you want Spigot and comment out the other one.
+}
+
+/* This will replace '@VERSION@' in the plugin.yml with the version declared above, just put '@VERSION@' for the version in the plugin.yml */
+processResources {
+	filter ReplaceTokens, tokens: [
+        "VERSION": version
+	]
+}
+
+compileJava.options.encoding = 'UTF-8' // Encode your source code with UTF-8
+compileJava.outputs.upToDateWhen { false } // Always rebuild
+
+// Generate Sources Jar
+task sourcesJar(type: Jar) {
+	classifier 'sources'
+	from sourceSets.main.allSource
+}
+
+// Generate Javadoc Jar
+task javadocJar(type: Jar) {
+	classifier 'javadoc'
+	from javadoc.destinationDir
+}
+
+artifacts {
+	archives sourcesJar, javadocJar // Build Sources and Javadoc Jar
+}

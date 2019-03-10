@@ -1,13 +1,13 @@
 name: OnePlayerSleep
-main: main.java.prof_bloodstone.one_player_sleep.OnePlayerSleep
-version: 1.0.1
+main: dev.bloodstone.one_player_sleep.OnePlayerSleep
+version: @VERSION@
 description: Allows for skipping the night with just 1 player in bed!
 author: Prof_Bloodstone
 api-version: 1.13
 commands:
   wakeup:
     description: Wakes everyone up
-    usage: "Usage: /<command>"
+    usage: "Usage: /<command> [world]"
     permission: ops.wakeup
 permissions:
   ops.*:

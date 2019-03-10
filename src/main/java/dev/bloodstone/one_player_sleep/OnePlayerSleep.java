@@ -1,4 +1,4 @@
-package main.java.prof_bloodstone.one_player_sleep;
+package dev.bloodstone.one_player_sleep;
 
 /*
    OnePlayerSleep - simple sleeping plugin for multiplayer Spigot-compatible Minecraft servers.
@@ -26,7 +26,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 
@@ -35,7 +37,7 @@ public class OnePlayerSleep extends JavaPlugin {
     private static String min_player_config = "min_players_in_bed";
     private static String min_prcnt_config = "prcnt_players_in_bed";
     final long day_length = 20 * 60 * 20;  // 20 min * 60 sec / min * 20 ticks / sec
-    BukkitTask task;
+    Map<String, BukkitTask> tasks = new ConcurrentHashMap<>();
 
     @Override
     public void onEnable() {
@@ -86,42 +88,39 @@ public class OnePlayerSleep extends JavaPlugin {
         return getConfig().getStringList("kicked_from_bed_messages");
     }
 
-    World getOverworld() {
-        // TODO: Don't assume we always have overworld
-        return getServer().getWorlds().stream().filter(world -> world.getEnvironment() == World.Environment.NORMAL).findFirst().get();
+    String getNoSleepingPlayersMessage() { return getConfig().getString("no_players_sleeping", null); }
+
+    int getPlayerCount(World world) {
+        return world.getPlayers().size();
     }
 
-    int getPlayerCount() {
-        return getOverworld().getPlayers().size();
+    long getSleepingPlayerCount(World world) {
+        return getSleepingPlayers(world).count();
     }
 
-    long getSleepingPlayerCount() {
-        return getSleepingPlayers().count();
+    Stream<Player> getSleepingPlayers(World world) {
+        return world.getPlayers().stream().filter(HumanEntity::isSleeping);
     }
 
-    Stream<Player> getSleepingPlayers() {
-        return getOverworld().getPlayers().stream().filter(HumanEntity::isSleeping);
+    boolean isEnoughPlayersSleeping(World world) {
+        return isEnoughPlayersSleeping(world,0);
     }
 
-    boolean isEnoughPlayersSleeping() {
-        return isEnoughPlayersSleeping(0);
+    boolean isEnoughPlayersSleeping(World world, int bias) {
+        long sleeps = getSleepingPlayerCount(world) + bias;
+        return sleeps >= getTreshold(world);
     }
 
-    boolean isEnoughPlayersSleeping(int bias) {
-        long sleeps = getSleepingPlayerCount() + bias;
-        return sleeps >= getTreshold();
-    }
-
-    int getTreshold() {
+    int getTreshold(World world) {
         int countTreshold = minPlayers();
-        int prcntTreshold = (int) Math.ceil(minPrcnt() * getPlayerCount());
+        int prcntTreshold = (int) Math.ceil(minPrcnt() * getPlayerCount(world));
         return Math.min(countTreshold, prcntTreshold);
     }
 
-    BaseComponent[] generateRandomSleepMessage(String player_name) {
+    BaseComponent[] generateRandomSleepMessage(World world, String player_name) {
         List<String> messageList = getSleepingMessages();
         String message = selectRandomMessage(messageList);
-        return toSleepMessage(processSleepingMessage(message, player_name));
+        return toSleepMessage(processSleepingMessage(world, message, player_name), world);
     }
 
     String selectRandomMessage(List<String> messages) {
@@ -132,11 +131,11 @@ public class OnePlayerSleep extends JavaPlugin {
         return messages.get(rand.nextInt(messages.size()));
     }
 
-    BaseComponent[] toSleepMessage(String m) {
+    BaseComponent[] toSleepMessage(String m, World world) {
         getLogger().info("Using " + m);
         BaseComponent[] components = TextComponent.fromLegacyText(m);
         String hoverText = getConfig().getString("message_hover_text", null);
-        ClickEvent clickEvent = new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/OnePlayerSleep:wakeup");
+        ClickEvent clickEvent = new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/OnePlayerSleep:wakeup " + world.getName());
         HoverEvent hoverEvent = null;
         if (hoverText != null)
             hoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(hoverText).create());
@@ -148,9 +147,9 @@ public class OnePlayerSleep extends JavaPlugin {
         return components;
     }
 
-    String processSleepingMessage(String message, String player_name) {
-        long sleeping = getSleepingPlayerCount() + 1; // +1 because player going to bed isn't counted yet.
-        int treshold = getTreshold();
+    String processSleepingMessage(World world, String message, String player_name) {
+        long sleeping = getSleepingPlayerCount(world) + 1; // +1 because player going to bed isn't counted yet.
+        int treshold = getTreshold(world);
         long needed = Math.max(treshold - sleeping, 0);
         return processMessage(message, player_name)
                 .replaceAll("%sleeping%", Long.toString(sleeping))
@@ -173,17 +172,22 @@ public class OnePlayerSleep extends JavaPlugin {
         return (time % day_length) <= rate;
     }
 
-    void kickEveryoneFromBed() {
-        getSleepingPlayers().forEach(this::kickFromBed);
+    void kickEveryoneFromBed(World world) {
+        DEBUG("Kicking everyone");
+        getSleepingPlayers(world).forEach(this::kickFromBed);
     }
 
-    void kickEveryoneFromBed(String player_name) {
+    void kickEveryoneFromBed(World world, String player_name) {
         List<String> kickMessages = getKickMessages();
         if (!kickMessages.isEmpty()) {
             String selectedMessage = selectRandomMessage(kickMessages);
             String kickMessage = processMessage(selectedMessage, player_name);
-            getSleepingPlayers().forEach(p -> p.sendMessage(kickMessage));
+            getServer().broadcastMessage(kickMessage);
         }
-        kickEveryoneFromBed();
+        kickEveryoneFromBed(world);
+    }
+
+    void DEBUG(String message) {
+        getServer().broadcastMessage("OPS: " + message);
     }
 }

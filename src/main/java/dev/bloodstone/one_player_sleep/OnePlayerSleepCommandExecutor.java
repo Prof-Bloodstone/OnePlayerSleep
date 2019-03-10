@@ -1,4 +1,4 @@
-package main.java.prof_bloodstone.one_player_sleep;
+package dev.bloodstone.one_player_sleep;
 
 /*
    OnePlayerSleep - simple sleeping plugin for multiplayer Spigot-compatible Minecraft servers.
@@ -18,6 +18,7 @@ package main.java.prof_bloodstone.one_player_sleep;
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -33,9 +34,17 @@ public class OnePlayerSleepCommandExecutor implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] strings) {
-        if (strings.length != 0)
-            return false;
-        plugin.kickEveryoneFromBed(commandSender instanceof Player ? ((Player) commandSender).getDisplayName() : commandSender.getName());
+        if (strings.length > 1 || (!(commandSender instanceof Player) && strings.length == 0)) return false;
+
+        World world = strings.length == 0 ? ((Player) commandSender).getWorld() : plugin.getServer().getWorld(strings[0]);
+        if (world == null) return false;
+        if (plugin.getSleepingPlayerCount(world) != 0)
+            plugin.kickEveryoneFromBed(world, commandSender instanceof Player ? ((Player) commandSender).getDisplayName() : commandSender.getName());
+        else {
+            String msg = plugin.getNoSleepingPlayersMessage();
+            if (msg != null)
+                commandSender.sendMessage(msg);
+        }
         return true;
     }
 }

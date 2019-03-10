@@ -1,4 +1,4 @@
-package main.java.prof_bloodstone.one_player_sleep;
+package dev.bloodstone.one_player_sleep;
 
 /*
    OnePlayerSleep - simple sleeping plugin for multiplayer Spigot-compatible Minecraft servers.
@@ -20,11 +20,13 @@ package main.java.prof_bloodstone.one_player_sleep;
 
 import org.bukkit.World;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 public class OnePlayerSleepRunnable extends BukkitRunnable {
 
     private OnePlayerSleep plugin;
     private World world;
+    private BukkitTask task;
 
     OnePlayerSleepRunnable(OnePlayerSleep plugin, World world) {
         this.plugin = plugin;
@@ -33,11 +35,17 @@ public class OnePlayerSleepRunnable extends BukkitRunnable {
 
     @Override
     public void run() {
-        advanceTime();
-        // It seems like MC interrupts it before full day is over - but let's leave this alternative method.
-        if (plugin.isMorning(world)) {
-            plugin.kickEveryoneFromBed();
+        plugin.DEBUG("Runnable - run");
+        if(plugin.isEnoughPlayersSleeping(world)) {
+            plugin.DEBUG("Runnable - Enough people sleeping!");
+            advanceTime();
+            // It seems like MC interrupts it before full day is over - but let's leave this alternative method.
+            if (plugin.isMorning(world)) {
+                plugin.DEBUG("Skipper - it's morning!");
+                plugin.kickEveryoneFromBed(world);
+            }
         }
+        else plugin.DEBUG("Runnable - not enough people sleeping!");
     }
 
     private void advanceTime() {
@@ -45,7 +53,5 @@ public class OnePlayerSleepRunnable extends BukkitRunnable {
         long rate = plugin.getRate();
         world.setTime(time + rate);
     }
-
-
 
 }
