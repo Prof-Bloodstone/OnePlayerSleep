@@ -5,7 +5,7 @@ apply plugin: 'eclipse'
 apply plugin: 'idea'
 
 group = 'dev.bloodstone' // Put your groupId here 
-version = '1.0.3' // Put your version here
+version = '1.0.4' // Put your version here
 archivesBaseName = 'OnePlayerSleep' // Put your artifactId here
 
 sourceCompatibility = '1.8' // Put the minimum version of Java you want your plugin to run on
@@ -34,6 +34,12 @@ dependencies {
 	// Uncomment the line above if you want Spigot and comment out the other one.
 }
 
+task cleanResources {
+	delete fileTree("${buildDir}/resources/main").matching {
+		include "*.yml"
+	}
+}
+
 /* This will replace '@VERSION@' in the plugin.yml with the version declared above, just put '@VERSION@' for the version in the plugin.yml */
 processResources {
 	filter ReplaceTokens, tokens: [
@@ -43,6 +49,7 @@ processResources {
 
 compileJava.options.encoding = 'UTF-8' // Encode your source code with UTF-8
 compileJava.outputs.upToDateWhen { false } // Always rebuild
+compileJava.dependsOn 'cleanResources'
 
 // Generate Sources Jar
 task sourcesJar(type: Jar) {

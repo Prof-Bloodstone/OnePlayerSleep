@@ -18,6 +18,7 @@ package dev.bloodstone.one_player_sleep;
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -43,7 +44,7 @@ public class OnePlayerSleepCommandExecutor implements CommandExecutor {
         else {
             String msg = plugin.getNoSleepingPlayersMessage();
             if (msg != null)
-                commandSender.sendMessage(msg);
+                commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&', msg));
         }
         return true;
     }

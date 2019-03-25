@@ -36,9 +36,7 @@ public class OnePlayerSleepListener implements Listener {
 
     @EventHandler
     public void onPlayerBedEnterEvent(PlayerBedEnterEvent event) {
-        plugin.DEBUG("BedEnterEvent");
         if (event.getBedEnterResult() == PlayerBedEnterEvent.BedEnterResult.OK) {
-            plugin.DEBUG("BedEnterEvent - can sleep");
             World world = event.getPlayer().getWorld();
             String world_name = world.getName();
             if (!plugin.getSleepingMessages().isEmpty()) {
@@ -47,8 +45,6 @@ public class OnePlayerSleepListener implements Listener {
             }
             if (plugin.tasks.getOrDefault(world_name, null) == null
                     || plugin.tasks.get(world_name).isCancelled()) {
-
-                plugin.DEBUG("BedEnterEvent - starting new task");
                 plugin.tasks.put(world_name, new OnePlayerSleepRunnable(plugin, world).runTaskTimer(
                         plugin,
                         plugin.getConfig().getInt("delay", 60),
@@ -65,10 +61,11 @@ public class OnePlayerSleepListener implements Listener {
         if (plugin.getSleepingPlayerCount(world) == 0
                 && plugin.tasks.getOrDefault(world_name, null) != null
                 && !plugin.tasks.get(world_name).isCancelled()) {
-            plugin.DEBUG("BedLeaveEvent - canceling task");
             plugin.tasks.get(world_name).cancel();
             if (plugin.isMorning(world)) {
-                if (world.isThundering()) {world.setThunderDuration(1);}
+                if (world.hasStorm()) {
+                    world.setWeatherDuration(1);
+                }
             }
         }
     }

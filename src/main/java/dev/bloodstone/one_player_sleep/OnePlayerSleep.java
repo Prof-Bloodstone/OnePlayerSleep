@@ -19,6 +19,7 @@ package dev.bloodstone.one_player_sleep;
  */
 
 import net.md_5.bungee.api.chat.*;
+import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
@@ -103,11 +104,7 @@ public class OnePlayerSleep extends JavaPlugin {
     }
 
     boolean isEnoughPlayersSleeping(World world) {
-        return isEnoughPlayersSleeping(world,0);
-    }
-
-    boolean isEnoughPlayersSleeping(World world, int bias) {
-        long sleeps = getSleepingPlayerCount(world) + bias;
+        long sleeps = getSleepingPlayerCount(world);
         return sleeps >= getTreshold(world);
     }
 
@@ -158,8 +155,7 @@ public class OnePlayerSleep extends JavaPlugin {
     }
 
     String processMessage(String message, String player_name) {
-        return message.replaceAll("%playername%", player_name)
-                .replaceAll("&([a-z0-9])", "\u00a7$1"); // Allow use of color codes
+        return ChatColor.translateAlternateColorCodes('&', message).replaceAll("%playername%", player_name);
     }
 
     void kickFromBed(Player player) {
@@ -169,11 +165,13 @@ public class OnePlayerSleep extends JavaPlugin {
     boolean isMorning(World world) {
         long rate = getRate();
         long time = world.getTime();
-        return (time % day_length) <= rate;
+        // From testing MC always wakes players up at time 23992 (where 24000 is full day)
+        // or a bit later, if it didn't have that time (was skipped)
+        // A little bit of additional threshold is used here
+        return ((time + 20) % day_length) <= rate + 20;
     }
 
     void kickEveryoneFromBed(World world) {
-        DEBUG("Kicking everyone");
         getSleepingPlayers(world).forEach(this::kickFromBed);
     }
 
@@ -185,9 +183,5 @@ public class OnePlayerSleep extends JavaPlugin {
             getServer().broadcastMessage(kickMessage);
         }
         kickEveryoneFromBed(world);
-    }
-
-    void DEBUG(String message) {
-        getServer().broadcastMessage("OPS: " + message);
     }
 }
