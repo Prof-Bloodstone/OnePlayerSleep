@@ -41,7 +41,11 @@ public class OnePlayerSleepRunnable extends BukkitRunnable {
     private void advanceTime() {
         long time = world.getFullTime();
         long rate = plugin.getRate();
-        world.setFullTime(time + rate);
+        if (!plugin.nightEnded(world)) {
+            world.setFullTime(time + rate);
+        } else if (world.hasStorm()) {
+            world.setWeatherDuration(1);
+        }
     }
 
 }

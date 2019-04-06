@@ -5,7 +5,7 @@ apply plugin: 'eclipse'
 apply plugin: 'idea'
 
 group = 'dev.bloodstone' // Put your groupId here 
-version = '1.0.4' // Put your version here
+version = '1.0.5' // Put your version here
 archivesBaseName = 'OnePlayerSleep' // Put your artifactId here
 
 sourceCompatibility = '1.8' // Put the minimum version of Java you want your plugin to run on

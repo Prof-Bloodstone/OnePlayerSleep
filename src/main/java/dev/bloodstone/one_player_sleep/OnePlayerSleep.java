@@ -37,6 +37,9 @@ public class OnePlayerSleep extends JavaPlugin {
 
     private static String min_player_config = "min_players_in_bed";
     private static String min_prcnt_config = "prcnt_players_in_bed";
+    // After this tick, minecraft kicks players out of bed.
+    // SRC: https://minecraft.gamepedia.com/Bed#Sleeping
+    final long nighttime_end = 23458;
     final long day_length = 20 * 60 * 20;  // 20 min * 60 sec / min * 20 ticks / sec
     Map<String, BukkitTask> tasks = new ConcurrentHashMap<>();
 
@@ -129,7 +132,6 @@ public class OnePlayerSleep extends JavaPlugin {
     }
 
     BaseComponent[] toSleepMessage(String m, World world) {
-        getLogger().info("Using " + m);
         BaseComponent[] components = TextComponent.fromLegacyText(m);
         String hoverText = getConfig().getString("message_hover_text", null);
         ClickEvent clickEvent = new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/OnePlayerSleep:wakeup " + world.getName());
@@ -165,10 +167,12 @@ public class OnePlayerSleep extends JavaPlugin {
     boolean isMorning(World world) {
         long rate = getRate();
         long time = world.getTime();
-        // From testing MC always wakes players up at time 23992 (where 24000 is full day)
-        // or a bit later, if it didn't have that time (was skipped)
-        // A little bit of additional threshold is used here
         return ((time + 20) % day_length) <= rate + 20;
+    }
+
+    boolean nightEnded(World world) {
+        long time = world.getTime();
+        return time > nighttime_end ;
     }
 
     void kickEveryoneFromBed(World world) {
