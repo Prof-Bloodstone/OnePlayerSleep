@@ -58,7 +58,7 @@ public class OnePlayerSleepListener implements Listener {
     public void onPlayerBedLeaveEvent (PlayerBedLeaveEvent event) {
         World world = event.getPlayer().getWorld();
         String world_name = world.getName();
-        if (plugin.getSleepingPlayerCount(world) == 0
+        if (plugin.getSleepingPlayerCount(world) <= 1 // It's called BEFORE they leave bed
                 && plugin.tasks.getOrDefault(world_name, null) != null
                 && !plugin.tasks.get(world_name).isCancelled()) {
             plugin.tasks.get(world_name).cancel();
