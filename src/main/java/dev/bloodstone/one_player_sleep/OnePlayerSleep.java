@@ -52,6 +52,14 @@ public class OnePlayerSleep extends JavaPlugin {
         getCommand("wakeup").setExecutor(new OnePlayerSleepCommandExecutor(this));
     }
 
+    @Override
+    public void onDisable() {
+        super.onDisable();
+        for (BukkitTask runnable: tasks.values()) {
+            runnable.cancel();
+        }
+    }
+
     private void resetConfig(String path) {
         getConfig().set(path, getConfig().getDefaults().get(path));
     }
@@ -114,7 +122,7 @@ public class OnePlayerSleep extends JavaPlugin {
     int getTreshold(World world) {
         int countTreshold = minPlayers();
         int prcntTreshold = (int) Math.ceil(minPrcnt() * getPlayerCount(world));
-        return Math.min(countTreshold, prcntTreshold);
+        return Math.max(1, Math.min(countTreshold, prcntTreshold));
     }
 
     BaseComponent[] generateRandomSleepMessage(World world, String player_name) {
