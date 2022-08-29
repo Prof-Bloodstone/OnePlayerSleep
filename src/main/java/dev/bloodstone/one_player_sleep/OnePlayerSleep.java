@@ -142,7 +142,7 @@ public class OnePlayerSleep extends JavaPlugin {
     BaseComponent[] toSleepMessage(String m, World world) {
         BaseComponent[] components = TextComponent.fromLegacyText(m);
         String hoverText = getConfig().getString("message_hover_text", null);
-        ClickEvent clickEvent = new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/OnePlayerSleep:wakeup " + world.getName());
+        ClickEvent clickEvent = new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/oneplayersleep:wakeup " + world.getName());
         HoverEvent hoverEvent = null;
         if (hoverText != null)
             hoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(hoverText).create());
